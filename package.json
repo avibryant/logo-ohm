@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "ohm-js": "^17.1.0"
+  },
+  "scripts": {
+    "format": "prettier --write --no-semi ."
+  }
+}
