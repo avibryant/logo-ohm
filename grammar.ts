@@ -29,11 +29,11 @@ Logo {
       = num           -- num
       | name          -- name
       | var           -- var
-      | infix         -- infix
+      | operator      -- operator
       | "[" Decls "]"  -- block
       | "(" Exps ")"   -- paren
 
-    infix = "+" | "-" | "*" | "/"
+    operator = "+" | "-" | "*" | "/" | "?" | "??"
 
     name  (an identifier)
       = ~keyword letter alnum*
@@ -43,6 +43,7 @@ Logo {
       | digit+             -- whole
   
     var = ":" name
+
     keyword = decl | endK | to
     decl = "let" ~alnum
     to = "to" ~alnum

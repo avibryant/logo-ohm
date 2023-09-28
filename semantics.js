@@ -45,9 +45,9 @@ export const toAST = {
     }
   },
 
-  Exp_infix(_) {
+  Exp_operator(_) {
     return {
-      type: "infix",
+      type: "operator",
       name: this.sourceString
     }
   },

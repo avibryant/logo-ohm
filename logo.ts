@@ -6,7 +6,7 @@ semantics.addOperation("toAST", toAST)
 
 const input = `
 to foo :bar
-let :y = output 3 + :bar [1 2 3]
+let :y = output 3 + :bar [1? 2 3]
 
 end
 `
