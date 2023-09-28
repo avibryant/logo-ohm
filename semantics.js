@@ -1,11 +1,4 @@
 export const toAST = {
-  Prog(cmds) {
-    return cmds.toAST()
-  },
-
-  Cmds(cmds) {
-    return cmds.children.map(c => c.toAST())
-  },
 
   Cmd_func(_to, name, args, _nl, decls, _end, _eoc) {
     return {
@@ -16,8 +9,11 @@ export const toAST = {
     }
   },
 
-  Decls(decls) {
-    return decls.children.map(d => d.toAST())
+  Cmd_decls(decls) {
+    return {
+      type: "decls",
+      decls: decls.toAST()
+    }
   },
 
   Decl_let(_decl, name, _eq, exps, _nl) {
@@ -28,28 +24,39 @@ export const toAST = {
     }
   },
 
-  Exps(exps) {
-    return exps.children.map(e => e.toAST())
-  },
-
-  Cmd_skip(_) {
-    return null
+  Decl_exps(exps) {
+    return {
+      type: "exps",
+      exps: exps.toAST()
+    }
   },
 
   Exp_num(_) {
-    return this.sourceString
+    return {
+      type: "num",
+      text: this.sourceString
+    }
   },
 
   Exp_name(_) {
-    return this.sourceString
+    return {
+      type: "word",
+      name: this.sourceString
+    }
   },
 
   Exp_infix(_) {
-    return this.sourceString
+    return {
+      type: "infix",
+      name: this.sourceString
+    }
   },
 
   Exp_block(_open, decls, _close) {
-    return decls.toAST()
+    return {
+      type: "block",
+      decls: decls.toAST()
+    }
   },
 
   Exp_paren(_open, exps, _close) {
@@ -58,5 +65,32 @@ export const toAST = {
 
   name(_first, _last) {
     return this.sourceString
+  },
+
+  var(_color, name) {
+    return {
+      type: "var",
+      name: name.toAST()
+    }
+  },
+
+  Prog(cmds) {
+    return cmds.toAST()
+  },
+
+  Decl_skip(_) {
+    return null
+  },
+
+  Cmds(cmds) {
+    return cmds.children.map(c => c.toAST())
+  },
+
+  Decls(decls) {
+    return decls.children.map(d => d.toAST()).filter(d => d != null)
+  },
+
+  Exps(exps) {
+    return exps.children.map(e => e.toAST())
   }
 }

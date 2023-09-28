@@ -11,16 +11,16 @@ Logo {
       = Cmd*
   
     Cmd
-      = to name name* nl Decls endK nl  -- func
+      = to name var* nl Decls endK nl  -- func
       | Decls                               -- decls
-      | "\n"                                -- skip
 
     Decls
       = Decl+
 
     Decl
-      = decl name "=" Exps nl            -- let
+      = decl var "=" Exps nl               -- let
       | Exps                               -- exps
+      | "\n"                               -- skip
   
     Exps
       = Exp+
@@ -28,6 +28,7 @@ Logo {
     Exp
       = num           -- num
       | name          -- name
+      | var           -- var
       | infix         -- infix
       | "[" Decls "]"  -- block
       | "(" Exps ")"   -- paren
@@ -41,6 +42,7 @@ Logo {
       = digit* "." digit+  -- fract
       | digit+             -- whole
   
+    var = ":" name
     keyword = decl | endK | to
     decl = "let" ~alnum
     to = "to" ~alnum
