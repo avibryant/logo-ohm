@@ -1,5 +1,5 @@
 import { grammar } from "./grammar"
-import {toAST} from './semantics'
+import {toAST} from './parser'
 
 const semantics = grammar.createSemantics()
 semantics.addOperation("toAST", toAST)

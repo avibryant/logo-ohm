@@ -4,7 +4,7 @@ export const toAST = {
     return {
       type: "func",
       name: name.toAST(),
-      argNames: args.children.map(a => a.toAST()),
+      argNames: args.children.map(a => a.toAST().name),
       decls: decls.toAST()
     }
   },
@@ -19,7 +19,7 @@ export const toAST = {
   Decl_let(_decl, name, _eq, exps, _nl) {
     return {
       type: "let",
-      name: name.toAST(),
+      name: name.toAST().name,
       exps: exps.toAST()
     }
   },
