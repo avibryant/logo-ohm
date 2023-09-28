@@ -1,13 +1,17 @@
-export type Node =
-    Func |
-    Decls |
-    Let |
-    Exps |
-    Num |
-    Word |
-    Operator | 
-    Block | 
-    Var
+import { grammar } from "./grammar"
+import {toAST} from './parser'
+
+const semantics = grammar.createSemantics()
+semantics.addOperation("toAST", toAST)
+
+export function parse(input: string): Cmd[] {
+    const m = grammar.match(input)
+    return semantics(m).toAST() as Cmd[]
+}
+
+export type Cmd =  Func | Decls
+export type Decl = Let | Exps
+export type Exp = Num | Word | Operator | Block | Var
 
 export interface Func {
     type: "func"
@@ -20,7 +24,7 @@ export interface Decls {
     decls: Decl[]
 }
 
-type Decl = Let | Exps
+
 export interface Let {
     type: "let"
     name: string
@@ -31,8 +35,6 @@ export interface Exps {
     type: "exps"
     exps: Exp[]
 }
-
-export type Exp = Num | Word | Operator | Block | Var
 
 export interface Num {
     type: "num"
