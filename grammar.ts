@@ -1,5 +1,3 @@
-//From Alex Warth
-
 import * as ohm from "ohm-js"
 
 export const grammar = ohm.grammar(String.raw`
@@ -13,34 +11,29 @@ Logo {
       = Cmd*
   
     Cmd
-      = to name name* "\n" Cmds endK "\n"  -- funcDecl
-      | decl name "=" Exp "\n"             -- varDecl
-      | Exp                                -- exp
-      | "\n"                              -- skip
+      = to name name* nl Decls endK nl  -- func
+      | Decls                               -- decls
+      | "\n"                                -- skip
+
+    Decls
+      = Decl+
+
+    Decl
+      = decl name "=" Exps nl            -- let
+      | Exps                               -- exps
   
-    Exp
-      = AddExp
+    Exps
+      = Exp+
     
-    AddExp
-      = AddExp "+" MulExp  -- add
-      | AddExp "-" MulExp  -- sub
-      | MulExp
-  
-    MulExp
-      = MulExp "*" UnExp  -- mul
-      | MulExp "/" UnExp  -- div
-      | UnExp
-  
-    UnExp
-      = "-" PriExp  -- neg
-      | PriExp
-  
-    PriExp
+    Exp
       = num           -- num
       | name          -- name
-      | "[" Cmds "]"  -- block
-      | "(" Exp ")"   -- paren
-  
+      | infix         -- infix
+      | "[" Decls "]"  -- block
+      | "(" Exps ")"   -- paren
+
+    infix = "+" | "-" | "*" | "/"
+
     name  (an identifier)
       = ~keyword letter alnum*
   
@@ -48,11 +41,11 @@ Logo {
       = digit* "." digit+  -- fract
       | digit+             -- whole
   
-    priExpStart = digit | "[" | "("
     keyword = decl | endK | to
     decl = "let" ~alnum
     to = "to" ~alnum
     endK = "end" ~alnum
-    nl = "\n"  
+    space := "\t" | " "
+    nl = "\n" | end
 }
 `)
