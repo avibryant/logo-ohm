@@ -28,47 +28,87 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
     function compileFunc(to: a.To): i.Block {
         const iBlock = compileBlock(to.block.statements)
         //TODO add locals
+        //TODO check arity
         return iBlock
     }
     
     function compileBlock(stmts: a.Statement[]): i.Block {
         const instructions: i.Instruction[] = []
 
-        genStatement(0)
+        genStatement(stmts.slice(), instructions)
 
         return {
             type: "block",
             instructions
         }
+    }
 
-        function genStatement(i: number) {
-            switch(stmts[i].type) {
-                case "set":
-                    //TODO
-                    break
-                case "word":
-                case "operator":
-                    genExpression(i)
-                    break
-                default:
-                    throw new Error("statements cannot start with " + stmts[i].type)
-            }
-        }
+    function genStatement(stmts: a.Statement[], instructions: i.Instruction[]): number {
+        if(stmts.length == 0)
+            throw new Error("Unexpectedly ran out of statements")
 
-        function genExpression(i: number) {
-            switch(stmts[i].type) {
-                case "num":
-                    break
-                case "paren":
-                    break
-                case "block":
-                    break
-                case "operator":
-                case "word":
-                    break
-                default:
-                    throw new Error("expressions cannot include " + stmts[i].type)
-            }
+        const peek = stmts[0]
+        switch(peek.type) {
+            case "set":
+                //TODO
+                return 0
+            case "word":
+            case "operator":
+                return genExpression(stmts, instructions)
+            default:
+                throw new Error("statements cannot start with " + peek.type)
         }
+    }
+
+
+    function genExpression(stmts: a.Statement[], instructions: i.Instruction[]): number {
+        if(stmts.length == 0)
+            throw new Error("Ran out of expressions unexpectedly")
+
+        const peek = stmts[0]
+        switch(peek.type) {
+            case "num":
+                instructions.push({
+                    type: "num",
+                    value: parseFloat(peek.text)
+                })
+                stmts.shift()
+                return 1
+                break
+            case "operator":
+            case "word":
+                const ar = arity(peek.text)
+                stmts.shift()
+                let required = ar.inputs
+                while(required > 0) {
+                    required -= genExpression(stmts, instructions)
+                }
+                instructions.push({
+                    type: "call",
+                    name: peek.text
+                })
+                return ar.outputs
+            case "paren":
+                const expressions = peek.exps.slice()
+                let stack = 0
+                while(expressions.length > 0) {
+                    stack += genExpression(expressions, instructions)
+                }
+                return stack
+            case "block":
+                instructions.push(compileBlock(peek.statements))
+                return 1
+            default:
+                throw new Error("expressions cannot include " + peek.type)
+        }
+    }
+
+    interface Arity {
+        inputs: number
+        outputs: number
+    }
+
+    function arity(name: string): Arity {
+        return {inputs: 0, outputs: 0} //TODO
     }
 }
