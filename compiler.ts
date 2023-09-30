@@ -17,7 +17,7 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
     let compiled = new Map<string,i.Block>()
 
      function compileFunc(to: a.To): i.Block {
-        const block = compileBlock(to.block.statements)
+        const block = compileBlock(to.block.statements, new Set(to.inputs))
         to.inputs.forEach(name => {
             block.instructions.unshift({
                 type: "set",
@@ -25,14 +25,14 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
             })
         })
         if(block.stack != to.outputs.length)
-            throw new Error("Expected " + to.outputs + " outputs for " + to.name + " but got " + block.stack)
+            throw new Error("Expected " + to.outputs.length + " outputs for " + to.name + " but got " + block.stack)
         return block
     }
     
-    function compileBlock(stmts: a.Statement[]): i.Block {
+    function compileBlock(stmts: a.Statement[], locals: Set<string>): i.Block {
         const instructions: i.Instruction[] = []
 
-        const n = genStatement(stmts.slice(), instructions)
+        const n = genStatement(stmts.slice(), instructions, locals)
 
         return {
             type: "block",
@@ -41,13 +41,13 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
         }
     }
 
-    function genStatement(stmts: a.Statement[], instructions: i.Instruction[]): number {
+    function genStatement(stmts: a.Statement[], instructions: i.Instruction[], locals: Set<string>): number {
         if(stmts.length == 0)
             throw new Error("Unexpectedly ran out of statements")
 
         const peek = stmts[0]
         if(peek.type == "set") {
-            const stack = genExpression(peek.exps, instructions)
+            const stack = genExpression(peek.exps, instructions, locals)
             if(stack == 0)
                 throw new Error("Nothing to set " + peek.name + " to")
             stmts.shift()
@@ -55,14 +55,15 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
                 type: "set",
                 name: peek.name
             })
+            locals.add(peek.name)
             return stack - 1
         } else {
-            return genExpression(stmts, instructions)
+            return genExpression(stmts, instructions, locals)
         }
     }
 
 
-    function genExpression(stmts: a.Statement[], instructions: i.Instruction[]): number {
+    function genExpression(stmts: a.Statement[], instructions: i.Instruction[], locals: Set<string>): number {
         if(stmts.length == 0)
             throw new Error("Ran out of expressions unexpectedly")
 
@@ -76,13 +77,20 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
                 stmts.shift()
                 return 1
             case "word":
-                //TODO: check for locals
+                if(locals.has(peek.text)) {
+                    stmts.shift()
+                    instructions.push({
+                        type: "get",
+                        name: peek.text
+                    })
+                    return 1
+                }
             case "operator":
                 const ar = arity(peek.text)
                 stmts.shift()
                 let required = ar.inputs
                 while(required > 0) {
-                    required -= genExpression(stmts, instructions)
+                    required -= genExpression(stmts, instructions, locals)
                 }
                 instructions.push({
                     type: "call",
@@ -93,11 +101,11 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
                 const expressions = peek.exps.slice()
                 let stack = 0
                 while(expressions.length > 0) {
-                    stack += genExpression(expressions, instructions)
+                    stack += genExpression(expressions, instructions, locals)
                 }
                 return stack
             case "block":
-                instructions.push(compileBlock(peek.statements))
+                instructions.push(compileBlock(peek.statements, locals))
                 return 1
             default:
                 throw new Error("expressions cannot include " + peek.type)
