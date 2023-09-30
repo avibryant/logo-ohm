@@ -1,11 +1,9 @@
-import {parse} from './ast'
+import {compile} from './compiler'
 
 const input = `
 to foo (a b -- c) [
-  bar
-  set foo a + b
+  3
 ]
 `
-const ast = parse(input)
-console.log(JSON.stringify(ast, null, 2))
-
+const inst = compile(input, new Map())
+console.log(inst)

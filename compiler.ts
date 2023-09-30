@@ -8,38 +8,36 @@ semantics.addOperation("toAST", toAST)
 
 function parse(input: string): a.To[] {
     const m = grammar.match(input)
-    return semantics(m).tokenize() as a.To[]
+    return semantics(m).toAST() as a.To[]
 }
 
 export function compile(input: string, prims: Map<string,i.Primitive>): i.Program {
     const funcs = new Map<string,a.To>()
     parse(input).forEach(to => funcs.set(to.name, to))
-    const compiled = new Map<string,i.Block>()
+    let compiled = new Map<string,i.Block>()
 
-    funcs.forEach((to,name) => {
-        compiled.set(name, compileFunc(to))
-    })
-
-    return {
-        functions: compiled,
-        primitives: prims
-    }
-
-    function compileFunc(to: a.To): i.Block {
-        const iBlock = compileBlock(to.block.statements)
-        //TODO add locals
-        //TODO check arity
-        return iBlock
+     function compileFunc(to: a.To): i.Block {
+        const block = compileBlock(to.block.statements)
+        to.inputs.forEach(name => {
+            block.instructions.unshift({
+                type: "set",
+                name: name
+            })
+        })
+        if(block.stack != to.outputs.length)
+            throw new Error("Expected " + to.outputs + " outputs for " + to.name + " but got " + block.stack)
+        return block
     }
     
     function compileBlock(stmts: a.Statement[]): i.Block {
         const instructions: i.Instruction[] = []
 
-        genStatement(stmts.slice(), instructions)
+        const n = genStatement(stmts.slice(), instructions)
 
         return {
             type: "block",
-            instructions
+            instructions,
+            stack: n
         }
     }
 
@@ -48,15 +46,18 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
             throw new Error("Unexpectedly ran out of statements")
 
         const peek = stmts[0]
-        switch(peek.type) {
-            case "set":
-                //TODO
-                return 0
-            case "word":
-            case "operator":
-                return genExpression(stmts, instructions)
-            default:
-                throw new Error("statements cannot start with " + peek.type)
+        if(peek.type == "set") {
+            const stack = genExpression(peek.exps, instructions)
+            if(stack == 0)
+                throw new Error("Nothing to set " + peek.name + " to")
+            stmts.shift()
+            instructions.push({
+                type: "set",
+                name: peek.name
+            })
+            return stack - 1
+        } else {
+            return genExpression(stmts, instructions)
         }
     }
 
@@ -74,9 +75,9 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
                 })
                 stmts.shift()
                 return 1
-                break
-            case "operator":
             case "word":
+                //TODO: check for locals
+            case "operator":
                 const ar = arity(peek.text)
                 stmts.shift()
                 let required = ar.inputs
@@ -87,7 +88,7 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
                     type: "call",
                     name: peek.text
                 })
-                return ar.outputs
+                return ar.outputs + required
             case "paren":
                 const expressions = peek.exps.slice()
                 let stack = 0
@@ -109,6 +110,31 @@ export function compile(input: string, prims: Map<string,i.Primitive>): i.Progra
     }
 
     function arity(name: string): Arity {
-        return {inputs: 0, outputs: 0} //TODO
+        if(funcs.has(name)) {
+            const f = funcs.get(name)!
+            return {
+                inputs: f.inputs.length,
+                outputs: f.outputs.length
+            }
+        }
+
+        if(prims.has(name)) {
+            const p = prims.get(name)!
+            return {
+                inputs: p.inputs,
+                outputs: p.outputs
+            }
+        }
+
+        throw new Error("Could not find " + name)
+    }
+
+    funcs.forEach((to,name) => {
+        compiled.set(name, compileFunc(to))
+    })
+
+    return {
+        functions: compiled,
+        primitives: prims
     }
 }

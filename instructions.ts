@@ -13,6 +13,7 @@ export type Instruction = Call | Local | Num | Block
 export interface Block {
     type: "block"
     instructions: Instruction[]
+    stack: number
 }
 
 export interface Call {
