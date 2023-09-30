@@ -5,50 +5,46 @@ export const grammar = ohm.grammar(String.raw`
 Logo {
 
     Prog
-      = Cmds
-  
-    Cmds
-      = Cmd*
-  
-    Cmd
-      = to name var* nl Decls endK nl  -- func
-      | Decls                               -- decls
+      = To*
 
-    Decls
-      = Decl+
+    To
+      = "to" name Effect? Block
 
-    Decl
-      = decl var "=" Exps nl               -- let
-      | Exps                               -- exps
-      | "\n"                               -- skip
+    Effect
+      = "(" EffectInputs EffectOutputs? ")"
+
+    EffectInputs
+      = name*
+
+    EffectOutputs
+      = "--" name+
   
-    Exps
-      = Exp+
-    
+    Block
+      = "[" Statement+ "]"
+      
+    Statement
+      = Set | Exp
+
+    Set
+      = "set" name Exp+
+
     Exp
-      = num           -- num
-      | name          -- name
-      | var           -- var
-      | operator      -- operator
-      | "[" Decls "]"  -- block
-      | "(" Exps ")"   -- paren
+      = num
+      | name
+      | operator
+      | Block
+      | Parens
 
-    operator = "+" | "-" | "*" | "/" | "?" | "??"
+    Parens
+      = "(" Exp+ ")"
 
-    name  (an identifier)
-      = ~keyword letter alnum*
+    operator = "+" | "-" | "*" | "/"
+
+    name
+      = letter alnum*
   
-    num  (a number)
+    num
       = digit* "." digit+  -- fract
       | digit+             -- whole
-  
-    var = ":" name
-
-    keyword = decl | endK | to
-    decl = "let" ~alnum
-    to = "to" ~alnum
-    endK = "end" ~alnum
-    space := "\t" | " "
-    nl = "\n" | end
-}
+  }
 `)

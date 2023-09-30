@@ -1,96 +1,84 @@
 export const toAST = {
+  Prog(tos) {
+    return tos.children.map(t => t.toAST())
+  },
 
-  Cmd_func(_to, name, args, _nl, decls, _end, _eoc) {
+  To(_to, name, effect, block) {
+    var inputs = []
+    var outputs = []
+
+    if(effect.numChildren > 0) {
+      const e = effect.children[0].toAST()
+      inputs = e.inputs
+      outputs = e.outputs
+    }
+
     return {
-      type: "func",
-      name: name.toAST(),
-      argNames: args.children.map(a => a.toAST().name),
-      decls: decls.toAST()
+      type: "to",
+      name: name.toAST().text,
+      block: block.toAST(),
+      inputs, outputs
     }
   },
 
-  Cmd_decls(decls) {
+  Effect(_left, inputs, outputs, _right) {
+    var outputNames = []
+    if(outputs.numChildren > 0)
+      outputNames = outputs.children[0].toAST()
     return {
-      type: "decls",
-      decls: decls.toAST()
+      inputs: inputs.toAST(),
+      outputs: outputNames
     }
   },
 
-  Decl_let(_decl, name, _eq, exps, _nl) {
+  EffectInputs(names) {
+    return names.children.map(n => n.toAST().text)
+  },
+
+  EffectOutputs(_dash, names) {
+    return names.children.map(n => n.toAST().text)
+  },
+
+  Set(_set, name, exps) {
     return {
-      type: "let",
-      name: name.toAST().name,
-      exps: exps.toAST()
+      type: "set",
+      name: name.toAST().text,
+      exps: exps.children.map(e => e.toAST())
     }
   },
 
-  Decl_exps(exps) {
+  Block(_open, statements, _close) {
     return {
-      type: "exps",
-      exps: exps.toAST()
+      type: "block",
+      statements: statements.children.map(s => s.toAST())
     }
   },
 
-  Exp_num(_) {
+  Parens(_open, exps, _close) {
+    return {
+      type: "paren",
+      exps: exps.children.map(e => e.toAST())
+    }
+  },
+
+  num(_) {
     return {
       type: "num",
       text: this.sourceString
     }
   },
 
-  Exp_name(_) {
-    return {
-      type: "word",
-      name: this.sourceString
-    }
-  },
-
-  Exp_operator(_) {
+  operator(_) {
     return {
       type: "operator",
-      name: this.sourceString
+      text: this.sourceString
     }
-  },
-
-  Exp_block(_open, decls, _close) {
-    return {
-      type: "block",
-      decls: decls.toAST()
-    }
-  },
-
-  Exp_paren(_open, exps, _close) {
-    return exps.toAST()
   },
 
   name(_first, _last) {
-    return this.sourceString
-  },
-
-  var(_color, name) {
     return {
-      type: "var",
-      name: name.toAST()
+      type: "name",
+      text: this.sourceString
     }
-  },
-
-  Prog(cmds) {
-    return cmds.toAST()
-  },
-
-  Decl_skip(_) {
-    return null
-  },
-
-  Cmds(cmds) {
-    return cmds.children.map(c => c.toAST())
-  },
-
-  Decls(decls) {
-    return decls.children.map(d => d.toAST()).filter(d => d != null)
-  },
-
-  Exps(exps) {
-    return exps.children.map(e => e.toAST())
   }
 }

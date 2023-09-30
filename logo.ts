@@ -1,10 +1,11 @@
 import {parse} from './ast'
 
 const input = `
-to foo :bar
-let :y = output 3 + :bar [1? 2 3]
-
-end
+to foo (a b -- c) [
+  bar
+  set foo [1 2 3]
+]
 `
 const ast = parse(input)
 console.log(JSON.stringify(ast, null, 2))
+
