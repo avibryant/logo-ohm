@@ -77,7 +77,7 @@ export const toAST = {
 
   name(_first, _last) {
     return {
-      type: "name",
+      type: "word",
       text: this.sourceString
     }
   }

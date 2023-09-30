@@ -4,37 +4,28 @@ import {toAST} from './parser'
 const semantics = grammar.createSemantics()
 semantics.addOperation("toAST", toAST)
 
-export function parse(input: string): Cmd[] {
+export function parse(input: string): To[] {
     const m = grammar.match(input)
-    return semantics(m).toAST() as Cmd[]
+    return semantics(m).toAST() as To[]
 }
 
-export type Cmd =  Func | Decls
-export type Decl = Let | Exps
-export type Exp = Num | Word | Operator | Block | Var
-
-export interface Func {
+export interface To {
     type: "func"
-    argNames: string[]
-    decls: Decl[]
+    name: string
+    block: Block
+    inputs: string[],
+    outputs: string[]
 }
 
-export interface Decls {
-    type: "decls"
-    decls: Decl[]
-}
+export type Statement = Set | Exp
 
-
-export interface Let {
+export interface Set {
     type: "let"
     name: string
     exps: Exp[]
 }
 
-export interface Exps {
-    type: "exps"
-    exps: Exp[]
-}
+type Exp = Num | Word | Operator | Block | Paren
 
 export interface Num {
     type: "num"
@@ -43,20 +34,20 @@ export interface Num {
 
 export interface Word {
     type: "word"
-    name: string
+    text: string
 }
 
 export interface Operator {
     type: "operator"
-    name: string
+    text: string
 }
 
 export interface Block {
     type: "block"
-    decls: Decl[]
+    statements: Statement[]
 }
 
-export interface Var {
-    type: "var"
-    name: string
+export interface Paren {
+    type: "paren"
+    exps: Exp[]
 }
