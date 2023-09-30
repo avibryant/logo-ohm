@@ -3,7 +3,7 @@ import {parse} from './ast'
 const input = `
 to foo (a b -- c) [
   bar
-  set foo [1 2 3]
+  set foo a + b
 ]
 `
 const ast = parse(input)
