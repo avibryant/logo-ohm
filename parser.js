@@ -14,10 +14,10 @@ export const toAST = {
     }
 
     return {
-      type: "to",
       name: name.toAST().text,
       block: block.toAST(),
-      inputs, outputs
+      inputs,
+      outputs
     }
   },
 

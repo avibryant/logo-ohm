@@ -1,16 +1,4 @@
-import { grammar } from "./grammar"
-import {toAST} from './parser'
-
-const semantics = grammar.createSemantics()
-semantics.addOperation("toAST", toAST)
-
-export function parse(input: string): To[] {
-    const m = grammar.match(input)
-    return semantics(m).toAST() as To[]
-}
-
 export interface To {
-    type: "func"
     name: string
     block: Block
     inputs: string[],
@@ -20,7 +8,7 @@ export interface To {
 export type Statement = Set | Exp
 
 export interface Set {
-    type: "let"
+    type: "set"
     name: string
     exps: Exp[]
 }
