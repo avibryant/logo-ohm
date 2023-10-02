@@ -1,27 +1,23 @@
 export interface To {
     name: string
     block: Block
-    inputs: string[],
-    outputs: string[]
+    inputs: string[]
 }
 
-export type Statement = Set | Exp
-
-export interface Set {
-    type: "set"
-    name: string
-    exps: Exp[]
-}
-
-type Exp = Num | Word | Operator | Block | Paren
+type Word = Num | Name | Operator | Block | Sym
 
 export interface Num {
     type: "num"
     text: string
 }
 
-export interface Word {
-    type: "word"
+export interface Name {
+    type: "name"
+    text: string
+}
+
+export interface Sym {
+    type: "symbol"
     text: string
 }
 
@@ -32,10 +28,5 @@ export interface Operator {
 
 export interface Block {
     type: "block"
-    statements: Statement[]
-}
-
-export interface Paren {
-    type: "paren"
-    exps: Exp[]
+    words: Word[]
 }

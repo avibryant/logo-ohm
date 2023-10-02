@@ -8,41 +8,26 @@ Logo {
       = To*
 
     To
-      = "to" name Effect? Block
-
-    Effect
-      = "(" EffectInputs EffectOutputs? ")"
-
-    EffectInputs
-      = name*
-
-    EffectOutputs
-      = "--" name+
+      = "to" name symbol* Block
   
     Block
-      = "[" Statement+ "]"
-      
-    Statement
-      = Set | Exp
+      = "[" Word+ "]"
 
-    Set
-      = "set" name Exp+
-
-    Exp
+    Word
       = num
+      | symbol
       | name
       | operator
       | Block
-      | Parens
-
-    Parens
-      = "(" Exp+ ")"
 
     operator = "+" | "-" | "*" | "/"
 
     name
       = letter alnum*
-  
+
+    symbol
+      = ":" name
+      
     num
       = digit* "." digit+  -- fract
       | digit+             -- whole
